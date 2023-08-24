@@ -1,45 +1,54 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 
+data = {'result': 'this is a test'}
+host = ('localhost', 8888)
+
+
 class Resquest(BaseHTTPRequestHandler):
-    def handler(self):
-        print("data:", self.rfile.readline().decode())
-        self.wfile.write(self.rfile.readline())
+    # def end_headers(self):
+    #     self.send_header('Access-Control-Allow-Origin', '*')
+    #     self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    #     self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type')
+    #     BaseHTTPRequestHandler.end_headers(self)
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type')
+        self.end_headers()
+
+        # Respond with an empty body to the pre-flight request
+        self.wfile.write(b'')
 
     def do_GET(self):
-        print(self.requestline)
-
-        data = {
-            'result_code': '1',
-            'result_desc': 'Success',
-            'timestamp': '',
-            'data': {'message_id': '25d55ad283aa400af464c76d713c07ad'}
-        }
-        self.send_response(200)
+        # self.send_response(200)
+        self.send_response(400)
         self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+
+    def do_POST(self):
+        datas = self.rfile.read(int(self.headers['content-length']))
+
+        print('headers', self.headers)
+        print("do post:", self.path, self.client_address, datas)
+
+        self.send_response(400)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type')
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
 
 
-    def do_POST(self):
-        print(self.headers)
-        print(self.command)
-        req_datas = self.rfile.read(int(self.headers['content-length'])) #重点在此步!
-        print(req_datas.decode())
-        data = {
-            'result_code': '2',
-            'result_desc': 'Success',
-            'timestamp': '',
-            'data': {'message_id': '25d55ad283aa400af464c76d713c07ad'}
-        }
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode('utf-8'))
-
-
 if __name__ == '__main__':
-    host = ('localhost', 8888)
     server = HTTPServer(host, Resquest)
     print("Starting server, listen at: %s:%s" % host)
     server.serve_forever()
